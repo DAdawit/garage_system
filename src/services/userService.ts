@@ -10,7 +10,7 @@ import { plainToClass } from "class-transformer";
 import { Paginate } from "../utils/pagination";
 
 export class UserService {
-  async getUsers2(req: Request): Promise<IUsersOut | null> {
+  async getUsers(req: Request): Promise<IUsersOut | null> {
     try {
       const queryBuilder = User.createQueryBuilder("users").select([
         "users.id",
@@ -33,10 +33,23 @@ export class UserService {
     }
   }
 
-  async get(): Promise<User[] | null> {
+  async getUserById(id: string): Promise<User | null> {
     try {
-      const users = await User.find({});
-      return users;
+      const user = await User.findOne({
+        where: { id: parseInt(id) },
+        select: [
+          "id",
+          "email",
+          "firstName",
+          "lastName",
+          "profilePic",
+          "isActive",
+          "role",
+          "created_at",
+          "updated_at",
+        ],
+      });
+      return user;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "An unknown error occurred"

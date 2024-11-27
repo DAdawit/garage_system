@@ -25,10 +25,13 @@ const authRoutes = (0, express_1.Router)();
 // Routes that do not require authentication
 router.post("/login", UserController_1.default.LoginUser);
 // router.get("/users", UserController.getUsers);
-router.get("/users", UserController_1.default.getUsers);
+router.get("/users", UserController_1.default.GetUsers);
+router.get("/users/:id", UserController_1.default.GetUserById);
 router.post("/users", UserController_1.default.addUser);
 router.post("/verify_token", UserController_1.default.verifyToken);
 router.delete("/users/:id", UserController_1.default.deleteUser);
+router.post("/users/:id/change_password", UserController_1.default.ChangePassword);
+// router.put("/users/:id", UserController.up);
 router.put("/change-profile-pic/:id", UserController_1.default.updateProfilePic);
 // // Adimin routes
 // authRoutes.get("/admin/profile", ProfileController.get);

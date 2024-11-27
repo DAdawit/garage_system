@@ -19,7 +19,7 @@ const SingleFileUploade_1 = require("../utils/SingleFileUploade");
 const DeleteImages_1 = require("../utils/DeleteImages");
 const pagination_1 = require("../utils/pagination");
 class UserService {
-    getUsers2(req) {
+    getUsers(req) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const queryBuilder = User_1.User.createQueryBuilder("users").select([
@@ -41,11 +41,24 @@ class UserService {
             }
         });
     }
-    get() {
+    getUserById(id) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const users = yield User_1.User.find({});
-                return users;
+                const user = yield User_1.User.findOne({
+                    where: { id: parseInt(id) },
+                    select: [
+                        "id",
+                        "email",
+                        "firstName",
+                        "lastName",
+                        "profilePic",
+                        "isActive",
+                        "role",
+                        "created_at",
+                        "updated_at",
+                    ],
+                });
+                return user;
             }
             catch (error) {
                 throw new Error(error instanceof Error ? error.message : "An unknown error occurred");

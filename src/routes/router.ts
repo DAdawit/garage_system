@@ -21,10 +21,13 @@ const authRoutes = Router();
 // Routes that do not require authentication
 router.post("/login", UserController.LoginUser);
 // router.get("/users", UserController.getUsers);
-router.get("/users", UserController.getUsers);
+router.get("/users", UserController.GetUsers);
+router.get("/users/:id", UserController.GetUserById);
 router.post("/users", UserController.addUser);
 router.post("/verify_token", UserController.verifyToken);
 router.delete("/users/:id", UserController.deleteUser);
+router.post("/users/:id/change_password", UserController.ChangePassword);
+// router.put("/users/:id", UserController.up);
 router.put("/change-profile-pic/:id", UserController.updateProfilePic);
 
 // // Adimin routes

@@ -46,9 +46,19 @@ UserController.createToken = (id) => {
     const token = jsonwebtoken_1.default.sign({ id: id }, secrete, { expiresIn: "10d" });
     return token;
 };
-UserController.getUsers = (req, res) => {
+UserController.GetUsers = (req, res) => {
     service
-        .getUsers2(req)
+        .getUsers(req)
+        .then((users) => {
+        return res.send(users);
+    })
+        .catch((err) => {
+        res.send(err);
+    });
+};
+UserController.GetUserById = (req, res) => {
+    service
+        .getUserById(req.params.id)
         .then((users) => {
         return res.send(users);
     })
@@ -83,7 +93,7 @@ UserController.addUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
             return res.status(400).send({ detail: "User creation failed" });
         })
             .catch((error) => {
-            res.status(500).send(error); // Ensure this is the only response in case of error
+            res.status(500).send(error);
         });
     }
 });
@@ -141,20 +151,29 @@ UserController.updateProfilePic = (req, res) => {
     });
 };
 UserController.ChangePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log(req.body);
     const userId = (0, getUserid_1.getUserId)(req);
     const user = yield User_1.User.findOne({
         where: {
             id: userId,
         },
     });
-    if (user && bcryptjs_1.default.compareSync(req.body.old_password, user.password)) {
-        user.password = bcryptjs_1.default.hashSync(req.body.new_password, 8);
-        user.save();
-        return res.status(200).send("password changed successfully");
+    if (!user) {
+        return res.status(404).json({ detail: "User not found" });
+    }
+    const { old_password, new_password } = req.body;
+    if (!old_password || !new_password) {
+        return res
+            .status(400)
+            .json({ detail: "old and new passwords are required" });
+    }
+    const isPasswordCorrect = bcryptjs_1.default.compareSync(old_password, user.password);
+    if (isPasswordCorrect) {
+        user.password = bcryptjs_1.default.hashSync(new_password, 8);
+        yield user.save();
+        return res.status(200).send({ message: "Password changed successfully" });
     }
     else {
-        return res.status(401).json({ detail: "Old password is incorrect !" });
+        return res.status(401).json({ detail: "old password is incorrect!" });
     }
 });
 exports.default = UserController;

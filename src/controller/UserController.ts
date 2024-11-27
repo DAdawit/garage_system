@@ -13,7 +13,7 @@ dotenv.config();
 const service = new UserService();
 
 class UserController {
-  private static createToken = (id: number) => {
+  private static readonly createToken = (id: number) => {
     const secrete = process.env.SECRETE;
     if (!secrete) {
       throw new Error("secrete environment variable is not set");
@@ -23,9 +23,9 @@ class UserController {
     return token;
   };
 
-  public static getUsers = (req: Request, res: Response) => {
+  public static readonly GetUsers = (req: Request, res: Response) => {
     service
-      .getUsers2(req)
+      .getUsers(req)
       .then((users) => {
         return res.send(users);
       })
@@ -34,7 +34,18 @@ class UserController {
       });
   };
 
-  public static addUser = async (
+  public static readonly GetUserById = (req: Request, res: Response) => {
+    service
+      .getUserById(req.params.id)
+      .then((users) => {
+        return res.send(users);
+      })
+      .catch((err) => {
+        res.send(err);
+      });
+  };
+
+  public static readonly addUser = async (
     req: Request,
     res: Response,
     next: NextFunction
@@ -67,12 +78,12 @@ class UserController {
           return res.status(400).send({ detail: "User creation failed" });
         })
         .catch((error) => {
-          res.status(500).send(error); // Ensure this is the only response in case of error
+          res.status(500).send(error);
         });
     }
   };
 
-  public static deleteUser = (
+  public static readonly deleteUser = (
     req: Request,
     res: Response,
     next: NextFunction
@@ -86,7 +97,8 @@ class UserController {
         return res.send(error);
       });
   };
-  public static LoginUser = async (req: Request, res: Response) => {
+
+  public static readonly LoginUser = async (req: Request, res: Response) => {
     const user = await User.findOne({
       where: {
         email: req.body.email,
@@ -107,7 +119,7 @@ class UserController {
     }
   };
 
-  public static verifyToken = async (req: Request, res: Response) => {
+  public static readonly verifyToken = async (req: Request, res: Response) => {
     const userId = getUserId(req);
     const user = await User.findOne({
       where: {
@@ -120,7 +132,7 @@ class UserController {
     }
   };
 
-  public static updateProfilePic = (req: Request, res: Response) => {
+  public static readonly updateProfilePic = (req: Request, res: Response) => {
     service
       .UpdateProfilePic(req.params.id, req)
       .then((user) => {
@@ -130,9 +142,11 @@ class UserController {
         return res.send(err);
       });
   };
-  public static ChangePassword = async (req: Request, res: Response) => {
-    // console.log(req.body);
 
+  public static readonly ChangePassword = async (
+    req: Request,
+    res: Response
+  ) => {
     const userId = getUserId(req);
     const user = await User.findOne({
       where: {
@@ -140,12 +154,24 @@ class UserController {
       },
     });
 
-    if (user && bcrypt.compareSync(req.body.old_password, user.password)) {
-      user.password = bcrypt.hashSync(req.body.new_password, 8);
-      user.save();
-      return res.status(200).send("password changed successfully");
+    if (!user) {
+      return res.status(404).json({ detail: "User not found" });
+    }
+
+    const { old_password, new_password } = req.body;
+    if (!old_password || !new_password) {
+      return res
+        .status(400)
+        .json({ detail: "old and new passwords are required" });
+    }
+
+    const isPasswordCorrect = bcrypt.compareSync(old_password, user.password);
+    if (isPasswordCorrect) {
+      user.password = bcrypt.hashSync(new_password, 8);
+      await user.save();
+      return res.status(200).send({ message: "Password changed successfully" });
     } else {
-      return res.status(401).json({ detail: "Old password is incorrect !" });
+      return res.status(401).json({ detail: "old password is incorrect!" });
     }
   };
 }

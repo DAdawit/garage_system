@@ -1,6 +1,5 @@
 import { Request } from "express";
 import { User } from "../entities/User";
-import { ReportedMenu } from "../entities/ReportedMenu";
 
 export class AdminService {
   async DeActivateUser(req: Request): Promise<User | null> {

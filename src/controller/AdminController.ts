@@ -1,11 +1,9 @@
 import { Request, Response } from "express";
 import { AdminService } from "../services/AdminService";
 import { UserService } from "../services/userService";
-import { ReportedProductService } from "../services/ReportedProductService";
 const userService = new UserService();
 const service = new AdminService();
 
-const reportProdService = new ReportedProductService();
 class AdminController {
   public static getUsers = (req: Request, res: Response) => {
     userService
@@ -36,17 +34,6 @@ class AdminController {
       })
       .catch((err) => {
         res.json(err);
-      });
-  };
-
-  public static getReportedProducts = (req: Request, res: Response) => {
-    reportProdService
-      .GetReportedMenu()
-      .then((stores) => {
-        res.send(stores);
-      })
-      .catch((error) => {
-        res.json(error);
       });
   };
 }

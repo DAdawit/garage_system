@@ -1,4 +1,3 @@
-import { error } from "console";
 import { NextFunction, Request, Response } from "express";
 import { PlainObjectToNewEntityTransformer } from "typeorm/query-builder/transformer/PlainObjectToNewEntityTransformer";
 import { UserService } from "../services/userService";

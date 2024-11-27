@@ -66,12 +66,12 @@ class UserController {
               user: userWithoutPassword,
               token: token,
             };
-            res.status(200).send(data);
+            return res.status(200).send(data);
           }
-          // res.send(user);
+          return res.status(400).send({ detail: "User creation failed" });
         })
         .catch((error) => {
-          res.send(error);
+          res.status(500).send(error); // Ensure this is the only response in case of error
         });
     }
   };

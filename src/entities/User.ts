@@ -1,4 +1,4 @@
-import { IsEmail, Min, MinLength, min } from "class-validator";
+import { IsEmail, IsEnum, Min, MinLength, min } from "class-validator";
 import {
   BaseEntity,
   Column,
@@ -16,7 +16,7 @@ import { getBaseUrl } from "../utils/host";
 
 @Entity("users")
 export class User extends BaseEntity {
-  private _profilePicUrl!: string;
+  // private _profilePicUrl!: string;
 
   @PrimaryGeneratedColumn()
   id!: number;
@@ -36,11 +36,11 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   profilePic!: string;
 
-  @AfterLoad()
-  loadImagePath() {
-    const baseUrl = getBaseUrl();
-    this._profilePicUrl = baseUrl + this.profilePic;
-  }
+  // @AfterLoad()
+  // loadImagePath() {
+  //   const baseUrl = getBaseUrl();
+  //   this._profilePicUrl = baseUrl + this.profilePic;
+  // }
 
   @Column({ default: true })
   isActive!: boolean;
@@ -49,7 +49,8 @@ export class User extends BaseEntity {
   @MinLength(5)
   password!: string;
 
-  @Column({ type: "enum", enum: Roles, default: Roles.admin })
+  @Column({ type: "enum", enum: Roles, default: Roles.customer })
+  @IsEnum(Roles)
   role!: Roles;
 
   // @OneToMany(() => Review, (review) => review.user, { onDelete: "SET NULL" })

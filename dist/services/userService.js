@@ -37,6 +37,7 @@ class UserService {
                     lastName: data.lastName,
                     email: data.email,
                     password: bcryptjs_1.default.hashSync(data.password, 8),
+                    role: data.role,
                 });
                 yield user.save();
                 return user;
@@ -83,7 +84,7 @@ class UserService {
             if (user !== null) {
                 user.profilePic = imagePath ? imagePath : "";
             }
-            user === null || user === void 0 ? void 0 : user.loadImagePath();
+            // user?.loadImagePath();
             yield (user === null || user === void 0 ? void 0 : user.save());
             return user;
         });

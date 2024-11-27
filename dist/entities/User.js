@@ -13,12 +13,7 @@ exports.User = void 0;
 const class_validator_1 = require("class-validator");
 const typeorm_1 = require("typeorm");
 const Types_1 = require("../Types");
-const host_1 = require("../utils/host");
 let User = class User extends typeorm_1.BaseEntity {
-    loadImagePath() {
-        const baseUrl = (0, host_1.getBaseUrl)();
-        this._profilePicUrl = baseUrl + this.profilePic;
-    }
 };
 exports.User = User;
 __decorate([
@@ -45,12 +40,6 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "profilePic", void 0);
 __decorate([
-    (0, typeorm_1.AfterLoad)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", void 0)
-], User.prototype, "loadImagePath", null);
-__decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], User.prototype, "isActive", void 0);
@@ -60,7 +49,8 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: "enum", enum: Types_1.Roles, default: Types_1.Roles.admin }),
+    (0, typeorm_1.Column)({ type: "enum", enum: Types_1.Roles, default: Types_1.Roles.customer }),
+    (0, class_validator_1.IsEnum)(Types_1.Roles),
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
 __decorate([

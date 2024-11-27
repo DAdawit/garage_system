@@ -1,11 +1,12 @@
 import { getRepository } from "typeorm";
 import { User } from "../entities/User";
 import bcrypt from "bcryptjs";
-import { UserCreate } from "../Types/UserT";
-import { DeleteI } from "../Types";
+import { UserCreate, UserCreateOut } from "../Types/UserT";
+import { DeleteI, Roles } from "../Types";
 import { uploadFile } from "../utils/SingleFileUploade";
 import { DeleteImage } from "../utils/DeleteImages";
 import { Request } from "express";
+import { plainToClass } from "class-transformer";
 
 export class UserService {
   async get(): Promise<User[] | null> {
@@ -19,13 +20,14 @@ export class UserService {
     }
   }
 
-  async addUser(data: UserCreate): Promise<User | null> {
+  async addUser(data: UserCreate): Promise<UserCreateOut | null> {
     try {
       const user = User.create({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
         password: bcrypt.hashSync(data.password, 8),
+        role: data.role as Roles,
       });
       await user.save();
 
@@ -75,7 +77,7 @@ export class UserService {
     if (user !== null) {
       user.profilePic = imagePath ? imagePath : "";
     }
-    user?.loadImagePath();
+    // user?.loadImagePath();
     await user?.save();
     return user;
   }

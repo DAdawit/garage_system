@@ -7,9 +7,9 @@
 import { User } from "../entities/User";
 import { PaginationResult } from "../utils/pagination";
 export enum Roles {
-  waiter = "waiter",
+  employee = "employee",
   admin = "admin",
-  kitchen = "kitchen",
+  customer = "customer",
 }
 
 export interface DeleteI {

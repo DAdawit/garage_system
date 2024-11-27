@@ -46,14 +46,14 @@ UserController.createToken = (id) => {
     const token = jsonwebtoken_1.default.sign({ id: id }, secrete, { expiresIn: "10d" });
     return token;
 };
-UserController.getUsers = (req, res, next) => {
+UserController.getUsers = (req, res) => {
     service
-        .get()
+        .getUsers2(req)
         .then((users) => {
-        res.json(users);
+        return res.send(users);
     })
-        .catch((error) => {
-        res.json(error);
+        .catch((err) => {
+        res.send(err);
     });
 };
 UserController.addUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {

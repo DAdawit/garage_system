@@ -23,18 +23,14 @@ class UserController {
     return token;
   };
 
-  public static getUsers = (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
+  public static getUsers = (req: Request, res: Response) => {
     service
-      .get()
+      .getUsers2(req)
       .then((users) => {
-        res.json(users);
+        return res.send(users);
       })
-      .catch((error) => {
-        res.json(error);
+      .catch((err) => {
+        res.send(err);
       });
   };
 

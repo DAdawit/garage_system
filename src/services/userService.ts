@@ -1,14 +1,38 @@
 import { getRepository } from "typeorm";
 import { User } from "../entities/User";
 import bcrypt from "bcryptjs";
-import { UserCreate, UserCreateOut } from "../Types/UserT";
+import { IUsersOut, UserCreate, UserCreateOut } from "../Types/UserT";
 import { DeleteI, Roles } from "../Types";
 import { uploadFile } from "../utils/SingleFileUploade";
 import { DeleteImage } from "../utils/DeleteImages";
 import { Request } from "express";
 import { plainToClass } from "class-transformer";
+import { Paginate } from "../utils/pagination";
 
 export class UserService {
+  async getUsers2(req: Request): Promise<IUsersOut | null> {
+    try {
+      const queryBuilder = User.createQueryBuilder("users").select([
+        "users.id",
+        "users.firstName",
+        "users.lastName",
+        "users.email",
+        "users.role",
+        "users.created_at",
+        "users.updated_at",
+      ]);
+
+      const data = Paginate<User>(queryBuilder, req);
+      return data;
+    } catch (error) {
+      throw new Error(
+        error instanceof Error
+          ? error.message
+          : "An unknown error occurred on fetching products"
+      );
+    }
+  }
+
   async get(): Promise<User[] | null> {
     try {
       const users = await User.find({});

@@ -30,3 +30,23 @@ export interface UserCreateOut {
   profilePic: string | null;
   password: string | null;
 }
+
+export interface IUsersOut {
+  data: Datum[];
+  total: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+  perPage: number;
+  currentPage: number;
+}
+
+interface Datum {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  created_at: Date;
+  updated_at: Date;
+}

@@ -17,7 +17,30 @@ const User_1 = require("../entities/User");
 const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const SingleFileUploade_1 = require("../utils/SingleFileUploade");
 const DeleteImages_1 = require("../utils/DeleteImages");
+const pagination_1 = require("../utils/pagination");
 class UserService {
+    getUsers2(req) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const queryBuilder = User_1.User.createQueryBuilder("users").select([
+                    "users.id",
+                    "users.firstName",
+                    "users.lastName",
+                    "users.email",
+                    "users.role",
+                    "users.created_at",
+                    "users.updated_at",
+                ]);
+                const data = (0, pagination_1.Paginate)(queryBuilder, req);
+                return data;
+            }
+            catch (error) {
+                throw new Error(error instanceof Error
+                    ? error.message
+                    : "An unknown error occurred on fetching products");
+            }
+        });
+    }
     get() {
         return __awaiter(this, void 0, void 0, function* () {
             try {

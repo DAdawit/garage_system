@@ -6,7 +6,7 @@ export const AppDataSource = new DataSource({
   port: 5432, // Database port
   username: "postgres", // Database username
   password: "root", // Database password
-  database: "hotelMenu", // Database name
+  database: "garage_sys", // Database name
   synchronize: true, // Automatically create database tables based on entities, use with caution in production
   logging: false,
   entities: [__dirname + "/entities/*{.js,.ts}"],

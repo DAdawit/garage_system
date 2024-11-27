@@ -90,11 +90,11 @@ UserController.addUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
 UserController.deleteUser = (req, res, next) => {
     service
         .remove(req.params.id)
-        .then((user) => {
-        res.send(user);
+        .then(() => {
+        return res.send({ message: "user deleted successfully" });
     })
         .catch((error) => {
-        res.send(error);
+        return res.send(error);
     });
 };
 UserController.LoginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -127,17 +127,17 @@ UserController.verifyToken = (req, res) => __awaiter(void 0, void 0, void 0, fun
     });
     if (user) {
         const { password } = user, userWithoutPassword = __rest(user, ["password"]);
-        res.status(200).send(userWithoutPassword);
+        return res.status(200).send(userWithoutPassword);
     }
 });
 UserController.updateProfilePic = (req, res) => {
     service
         .UpdateProfilePic(req.params.id, req)
         .then((user) => {
-        res.send(user);
+        return res.send(user);
     })
         .catch((err) => {
-        res.send(err);
+        return res.send(err);
     });
 };
 UserController.ChangePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {

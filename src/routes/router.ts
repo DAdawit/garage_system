@@ -23,6 +23,8 @@ router.post("/login", UserController.LoginUser);
 // router.get("/users", UserController.getUsers);
 router.get("/users", UserController.getUsers);
 router.post("/users", UserController.addUser);
+router.post("/verify_token", UserController.verifyToken);
+router.delete("/users/:id", UserController.deleteUser);
 router.put("/change-profile-pic/:id", UserController.updateProfilePic);
 
 // // Adimin routes

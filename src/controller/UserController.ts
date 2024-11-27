@@ -79,11 +79,11 @@ class UserController {
   ) => {
     service
       .remove(req.params.id)
-      .then((user) => {
-        res.send(user);
+      .then(() => {
+        return res.send({ message: "user deleted successfully" });
       })
       .catch((error) => {
-        res.send(error);
+        return res.send(error);
       });
   };
   public static LoginUser = async (req: Request, res: Response) => {
@@ -116,7 +116,7 @@ class UserController {
     });
     if (user) {
       const { password, ...userWithoutPassword } = user;
-      res.status(200).send(userWithoutPassword);
+      return res.status(200).send(userWithoutPassword);
     }
   };
 
@@ -124,10 +124,10 @@ class UserController {
     service
       .UpdateProfilePic(req.params.id, req)
       .then((user) => {
-        res.send(user);
+        return res.send(user);
       })
       .catch((err) => {
-        res.send(err);
+        return res.send(err);
       });
   };
   public static ChangePassword = async (req: Request, res: Response) => {

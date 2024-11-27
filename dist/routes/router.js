@@ -27,6 +27,8 @@ router.post("/login", UserController_1.default.LoginUser);
 // router.get("/users", UserController.getUsers);
 router.get("/users", UserController_1.default.getUsers);
 router.post("/users", UserController_1.default.addUser);
+router.post("/verify_token", UserController_1.default.verifyToken);
+router.delete("/users/:id", UserController_1.default.deleteUser);
 router.put("/change-profile-pic/:id", UserController_1.default.updateProfilePic);
 // // Adimin routes
 // authRoutes.get("/admin/profile", ProfileController.get);

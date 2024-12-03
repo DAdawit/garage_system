@@ -39,33 +39,36 @@ class UserController {
 }
 _a = UserController;
 UserController.createToken = (id) => {
-    const secrete = process.env.SECRETE;
-    if (!secrete) {
-        throw new Error("secrete environment variable is not set");
+    const secret = process.env.SECRET;
+    if (!secret) {
+        throw new Error("SECRET environment variable is not set");
     }
-    const token = jsonwebtoken_1.default.sign({ id: id }, secrete, { expiresIn: "10d" });
-    return token;
+    return jsonwebtoken_1.default.sign({ id }, secret, { expiresIn: "10d" });
 };
-UserController.GetUsers = (req, res) => {
-    service
-        .getUsers(req)
-        .then((users) => {
-        return res.send(users);
-    })
-        .catch((err) => {
-        res.send(err);
-    });
-};
-UserController.GetUserById = (req, res) => {
-    service
-        .getUserById(req.params.id)
-        .then((users) => {
-        return res.send(users);
-    })
-        .catch((err) => {
-        res.send(err);
-    });
-};
+UserController.GetUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const users = yield service.getUsers(req);
+        return res.status(200).json(users);
+    }
+    catch (err) {
+        console.error('Error fetching users:', err);
+        return res.status(500).json({ detail: "Failed to fetch users" });
+    }
+});
+UserController.GetUserById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield service.getUserById(req.params.id);
+        if (!user) {
+            return res.status(404).json({ detail: "User not found" });
+        }
+        const { password } = user, userWithoutPassword = __rest(user, ["password"]);
+        return res.status(200).json(userWithoutPassword);
+    }
+    catch (err) {
+        console.error('Error fetching user:', err);
+        return res.status(500).json({ detail: "Failed to fetch user" });
+    }
+});
 UserController.addUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const Newuser = (0, class_transformer_1.plainToInstance)(User_1.User, req.body);
     const errors = yield (0, class_validator_1.validate)(Newuser);
@@ -75,12 +78,11 @@ UserController.addUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         return res.status(400).json({ detail: "email already exists !" });
     }
     if (errors.length > 0) {
-        res.status(400).send(err);
+        return res.status(400).send(err);
     }
     else {
-        service
-            .addUser(Newuser)
-            .then((user) => {
+        try {
+            const user = yield service.addUser(Newuser);
             if (user) {
                 const { password } = user, userWithoutPassword = __rest(user, ["password"]);
                 const token = _a.createToken(user.id);
@@ -91,89 +93,106 @@ UserController.addUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
                 return res.status(200).send(data);
             }
             return res.status(400).send({ detail: "User creation failed" });
-        })
-            .catch((error) => {
-            res.status(500).send(error);
-        });
+        }
+        catch (err) {
+            console.error('Error creating user:', err);
+            return res.status(500).json({ detail: "Failed to create user" });
+        }
     }
 });
-UserController.deleteUser = (req, res, next) => {
-    service
-        .remove(req.params.id)
-        .then(() => {
+UserController.deleteUser = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        yield service.remove(req.params.id);
         return res.send({ message: "user deleted successfully" });
-    })
-        .catch((error) => {
-        return res.send(error);
-    });
-};
+    }
+    catch (err) {
+        console.error('Error deleting user:', err);
+        return res.status(500).json({ detail: "Failed to delete user" });
+    }
+});
 UserController.LoginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield User_1.User.findOne({
-        where: {
-            email: req.body.email,
-        },
-    });
-    if (!user) {
-        return res.status(400).json({ detail: "Incorrect email or password." });
-    }
-    if (user && bcryptjs_1.default.compareSync(req.body.password, user.password)) {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ detail: "Email and password are required" });
+        }
+        const user = yield User_1.User.findOne({ where: { email } });
+        if (!user || !bcryptjs_1.default.compareSync(password, user.password)) {
+            return res.status(401).json({ detail: "Incorrect email or password" });
+        }
         const token = _a.createToken(user.id);
-        const data = {
-            user: user,
-            token: token,
-        };
-        return res.status(200).send(data);
+        const { password: _ } = user, userWithoutPassword = __rest(user, ["password"]);
+        return res.status(200).json({
+            user: userWithoutPassword,
+            token
+        });
     }
-    else {
-        return res.status(401).json({ detail: "Incorrect email or password." });
+    catch (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({ detail: "Authentication failed" });
     }
 });
 UserController.verifyToken = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = (0, getUserid_1.getUserId)(req);
-    const user = yield User_1.User.findOne({
-        where: {
-            id: userId,
-        },
-    });
-    if (user) {
-        const { password } = user, userWithoutPassword = __rest(user, ["password"]);
-        return res.status(200).send(userWithoutPassword);
+    try {
+        const userId = (0, getUserid_1.getUserId)(req);
+        const user = yield User_1.User.findOne({
+            where: {
+                id: userId,
+            },
+        });
+        if (user) {
+            const { password } = user, userWithoutPassword = __rest(user, ["password"]);
+            return res.status(200).send(userWithoutPassword);
+        }
+        else {
+            return res.status(404).json({ detail: "User not found" });
+        }
+    }
+    catch (err) {
+        console.error('Error verifying token:', err);
+        return res.status(500).json({ detail: "Failed to verify token" });
     }
 });
-UserController.updateProfilePic = (req, res) => {
-    service
-        .UpdateProfilePic(req.params.id, req)
-        .then((user) => {
+UserController.updateProfilePic = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield service.UpdateProfilePic(req.params.id, req);
         return res.send(user);
-    })
-        .catch((err) => {
-        return res.send(err);
-    });
-};
+    }
+    catch (err) {
+        console.error('Error updating profile picture:', err);
+        return res.status(500).json({ detail: "Failed to update profile picture" });
+    }
+});
 UserController.ChangePassword = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = (0, getUserid_1.getUserId)(req);
-    const user = yield User_1.User.findOne({
-        where: {
-            id: userId,
-        },
-    });
-    if (!user) {
-        return res.status(404).json({ detail: "User not found" });
+    try {
+        const userId = (0, getUserid_1.getUserId)(req);
+        const user = yield User_1.User.findOne({
+            where: {
+                id: userId,
+            },
+        });
+        if (!user) {
+            return res.status(404).json({ detail: "User not found" });
+        }
+        const { old_password, new_password } = req.body;
+        if (!old_password || !new_password) {
+            return res
+                .status(400)
+                .json({ detail: "old and new passwords are required" });
+        }
+        const isPasswordCorrect = bcryptjs_1.default.compareSync(old_password, user.password);
+        if (isPasswordCorrect) {
+            user.password = bcryptjs_1.default.hashSync(new_password, 8);
+            yield user.save();
+            return res.status(200).send({ message: "Password changed successfully" });
+        }
+        else {
+            return res.status(401).json({ detail: "old password is incorrect!" });
+        }
     }
-    const { old_password, new_password } = req.body;
-    if (!old_password || !new_password) {
-        return res
-            .status(400)
-            .json({ detail: "old and new passwords are required" });
-    }
-    const isPasswordCorrect = bcryptjs_1.default.compareSync(old_password, user.password);
-    if (isPasswordCorrect) {
-        user.password = bcryptjs_1.default.hashSync(new_password, 8);
-        yield user.save();
-        return res.status(200).send({ message: "Password changed successfully" });
-    }
-    else {
-        return res.status(401).json({ detail: "old password is incorrect!" });
+    catch (err) {
+        console.error('Error changing password:', err);
+        return res.status(500).json({ detail: "Failed to change password" });
     }
 });
 exports.default = UserController;

@@ -1,18 +1,8 @@
 import { ObjectLiteral, SelectQueryBuilder } from "typeorm";
 import { Request } from "express";
 
-export interface PaginationResult<T> {
-  data: T[];
-  total: number;
-  totalPages: number;
-  currentPage: number;
-  pageSize: number;
-}
 
-export async function Paginate<T extends ObjectLiteral>(
-  queryBuilder: SelectQueryBuilder<T>,
-  req: Request
-): Promise<{
+interface PaginationResult<T> {
   data: T[];
   total: number;
   totalPages: number;
@@ -20,7 +10,14 @@ export async function Paginate<T extends ObjectLiteral>(
   hasPrev: boolean;
   perPage: number;
   currentPage: number;
-}> {
+}
+
+
+export async function Paginate<T extends ObjectLiteral>(
+  queryBuilder: SelectQueryBuilder<T>,
+  req: Request
+): Promise<PaginationResult<T>> {
+  // ... existing implementation remains the same
   const page: number = parseInt(req.query.page as string) || 1;
   const perPage: number = parseInt(req.query.limit as string) || 20;
   const offset = (page - 1) * perPage;
@@ -41,6 +38,8 @@ export async function Paginate<T extends ObjectLiteral>(
     hasNext,
     hasPrev,
     perPage,
-    currentPage,
+    currentPage
   };
 }
+
+

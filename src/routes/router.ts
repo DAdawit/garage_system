@@ -1,42 +1,47 @@
 import { Router } from "express";
 import UserController from "../controller/UserController";
-// import CartController from "../controller/CartController";
-// import MenuController from "../controller/MenuController";
-// import OrderController from "../controller/OrderController";
-// import authMiddleware from "../middleware/authMiddleware";
-// import CategoryController from "../controller/CategoryController";
-// import SubcategoryController from "../controller/SubCategoryController";
-// import WishListController from "../controller/WishListController";
-// import ProductRateingController from "../controller/ProductReviewsController";
-// import ReportProductController from "../controller/ReportProductController";
-// import AdminController from "../controller/AdminController";
-// import MealTimeController from "../controller/MealTimeController";
-// import HeroController from "../controller/HeroController";
-// import LogoController from "../controller/LogoController";
-// import ReportsController from "../controller/ReportsController";
-// import ProfileController from "../controller/ProfileController";
+import authMiddleware from "../middleware/authMiddleware";
+
+/**
+ * Router configuration for the Garage System API
+ * Organizes routes by authentication requirement and resource type
+ */
 const router = Router();
-const authRoutes = Router();
 
-// Routes that do not require authentication
-router.post("/login", UserController.LoginUser);
-// router.get("/users", UserController.getUsers);
-router.get("/users", UserController.GetUsers);
-router.get("/users/:id", UserController.GetUserById);
-router.post("/users", UserController.addUser);
-router.post("/verify_token", UserController.verifyToken);
-router.delete("/users/:id", UserController.deleteUser);
-router.post("/users/:id/change_password", UserController.ChangePassword);
-// router.put("/users/:id", UserController.up);
-router.put("/change-profile-pic/:id", UserController.updateProfilePic);
 
-// // Adimin routes
-// authRoutes.get("/admin/profile", ProfileController.get);
-// authRoutes.post("/admin/profile", ProfileController.addProfile);
-// authRoutes.put("/admin/profile/:id", ProfileController.updateProfile);
-// authRoutes.delete("/admin/profile/:id", ProfileController.get);
-// authRoutes.post("/admin/changePassword", UserController.ChangePassword);
+// Public routes
+const publicRoutes = Router();
 
-router.use(authRoutes);
+/**
+ * Authentication routes
+ * @public
+ */
+publicRoutes.post("/auth/login", UserController.LoginUser);
+publicRoutes.post("/auth/verify-token", UserController.verifyToken);
 
-export default router;
+/**
+ * Public user routes
+ * @public
+ */
+publicRoutes.post("/users", UserController.addUser); // signup
+
+// Protected routes
+const protectedRoutes = Router();
+protectedRoutes.use(authMiddleware);
+
+/**
+ * Protected user routes
+ * @protected
+ */
+protectedRoutes.get("/users", UserController.GetUsers);
+protectedRoutes.get("/users/:id", UserController.GetUserById);
+protectedRoutes.delete("/users/:id", UserController.deleteUser);
+protectedRoutes.post("/users/:id/change-password", UserController.ChangePassword);
+protectedRoutes.put("/users/:id/profile-picture", UserController.updateProfilePic);
+
+// Apply routes to main router
+router.use(publicRoutes);
+router.use(protectedRoutes);
+
+export default router;// In a separate error-handler.ts file
+

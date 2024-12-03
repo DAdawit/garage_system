@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Paginate = void 0;
 function Paginate(queryBuilder, req) {
     return __awaiter(this, void 0, void 0, function* () {
+        // ... existing implementation remains the same
         const page = parseInt(req.query.page) || 1;
         const perPage = parseInt(req.query.limit) || 20;
         const offset = (page - 1) * perPage;
@@ -30,7 +31,7 @@ function Paginate(queryBuilder, req) {
             hasNext,
             hasPrev,
             perPage,
-            currentPage,
+            currentPage
         };
     });
 }

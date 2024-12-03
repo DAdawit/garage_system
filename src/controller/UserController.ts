@@ -13,43 +13,43 @@ dotenv.config();
 const service = new UserService();
 
 class UserController {
-  private static readonly createToken = (id: number) => {
-    const secrete = process.env.SECRETE;
-    if (!secrete) {
-      throw new Error("secrete environment variable is not set");
+  private static readonly createToken = (id: number): string => {
+    const secret = process.env.SECRET;
+    if (!secret) {
+      throw new Error("SECRET environment variable is not set");
     }
-    const token = jwt.sign({ id: id }, secrete, { expiresIn: "10d" });
-
-    return token;
+    return jwt.sign({ id }, secret, { expiresIn: "10d" });
   };
 
-  public static readonly GetUsers = (req: Request, res: Response) => {
-    service
-      .getUsers(req)
-      .then((users) => {
-        return res.send(users);
-      })
-      .catch((err) => {
-        res.send(err);
-      });
+  public static readonly GetUsers = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const users = await service.getUsers(req);
+      return res.status(200).json(users);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      return res.status(500).json({ detail: "Failed to fetch users" });
+    }
   };
 
-  public static readonly GetUserById = (req: Request, res: Response) => {
-    service
-      .getUserById(req.params.id)
-      .then((users) => {
-        return res.send(users);
-      })
-      .catch((err) => {
-        res.send(err);
-      });
+  public static readonly GetUserById = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const user = await service.getUserById(req.params.id);
+      if (!user) {
+        return res.status(404).json({ detail: "User not found" });
+      }
+      const { password, ...userWithoutPassword } = user;
+      return res.status(200).json(userWithoutPassword);
+    } catch (err) {
+      console.error('Error fetching user:', err);
+      return res.status(500).json({ detail: "Failed to fetch user" });
+    }
   };
 
   public static readonly addUser = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
+  ): Promise<Response> => {
     const Newuser = plainToInstance(User, req.body);
 
     const errors = await validate(Newuser);
@@ -61,117 +61,132 @@ class UserController {
     }
 
     if (errors.length > 0) {
-      res.status(400).send(err);
+      return res.status(400).send(err);
     } else {
-      service
-        .addUser(Newuser)
-        .then((user) => {
-          if (user) {
-            const { password, ...userWithoutPassword } = user;
-            const token = this.createToken(user.id);
-            const data = {
-              user: userWithoutPassword,
-              token: token,
-            };
-            return res.status(200).send(data);
-          }
-          return res.status(400).send({ detail: "User creation failed" });
-        })
-        .catch((error) => {
-          res.status(500).send(error);
-        });
+      try {
+        const user = await service.addUser(Newuser);
+        if (user) {
+          const { password, ...userWithoutPassword } = user;
+          const token = this.createToken(user.id);
+          const data = {
+            user: userWithoutPassword,
+            token: token,
+          };
+          return res.status(200).send(data);
+        }
+        return res.status(400).send({ detail: "User creation failed" });
+      } catch (err) {
+        console.error('Error creating user:', err);
+        return res.status(500).json({ detail: "Failed to create user" });
+      }
     }
   };
 
-  public static readonly deleteUser = (
+  public static readonly deleteUser = async (
     req: Request,
     res: Response,
     next: NextFunction
-  ) => {
-    service
-      .remove(req.params.id)
-      .then(() => {
-        return res.send({ message: "user deleted successfully" });
-      })
-      .catch((error) => {
-        return res.send(error);
-      });
+  ): Promise<Response> => {
+    try {
+      await service.remove(req.params.id);
+      return res.send({ message: "user deleted successfully" });
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      return res.status(500).json({ detail: "Failed to delete user" });
+    }
   };
 
-  public static readonly LoginUser = async (req: Request, res: Response) => {
-    const user = await User.findOne({
-      where: {
-        email: req.body.email,
-      },
-    });
-    if (!user) {
-      return res.status(400).json({ detail: "Incorrect email or password." });
-    }
-    if (user && bcrypt.compareSync(req.body.password, user.password)) {
+  public static readonly LoginUser = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ detail: "Email and password are required" });
+      }
+
+      const user = await User.findOne({ where: { email } });
+      
+      if (!user || !bcrypt.compareSync(password, user.password)) {
+        return res.status(401).json({ detail: "Incorrect email or password" });
+      }
+
       const token = this.createToken(user.id);
-      const data = {
-        user: user,
-        token: token,
-      };
-      return res.status(200).send(data);
-    } else {
-      return res.status(401).json({ detail: "Incorrect email or password." });
-    }
-  };
-
-  public static readonly verifyToken = async (req: Request, res: Response) => {
-    const userId = getUserId(req);
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
-    if (user) {
-      const { password, ...userWithoutPassword } = user;
-      return res.status(200).send(userWithoutPassword);
-    }
-  };
-
-  public static readonly updateProfilePic = (req: Request, res: Response) => {
-    service
-      .UpdateProfilePic(req.params.id, req)
-      .then((user) => {
-        return res.send(user);
-      })
-      .catch((err) => {
-        return res.send(err);
+      const { password: _, ...userWithoutPassword } = user;
+      
+      return res.status(200).json({
+        user: userWithoutPassword,
+        token
       });
+    } catch (err) {
+      console.error('Login error:', err);
+      return res.status(500).json({ detail: "Authentication failed" });
+    }
+  };
+
+  public static readonly verifyToken = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const userId = getUserId(req);
+      const user = await User.findOne({
+        where: {
+          id: userId,
+        },
+      });
+      if (user) {
+        const { password, ...userWithoutPassword } = user;
+        return res.status(200).send(userWithoutPassword);
+      } else {
+        return res.status(404).json({ detail: "User not found" });
+      }
+    } catch (err) {
+      console.error('Error verifying token:', err);
+      return res.status(500).json({ detail: "Failed to verify token" });
+    }
+  };
+
+  public static readonly updateProfilePic = async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const user = await service.UpdateProfilePic(req.params.id, req);
+      return res.send(user);
+    } catch (err) {
+      console.error('Error updating profile picture:', err);
+      return res.status(500).json({ detail: "Failed to update profile picture" });
+    }
   };
 
   public static readonly ChangePassword = async (
     req: Request,
     res: Response
-  ) => {
-    const userId = getUserId(req);
-    const user = await User.findOne({
-      where: {
-        id: userId,
-      },
-    });
+  ): Promise<Response> => {
+    try {
+      const userId = getUserId(req);
+      const user = await User.findOne({
+        where: {
+          id: userId,
+        },
+      });
 
-    if (!user) {
-      return res.status(404).json({ detail: "User not found" });
-    }
+      if (!user) {
+        return res.status(404).json({ detail: "User not found" });
+      }
 
-    const { old_password, new_password } = req.body;
-    if (!old_password || !new_password) {
-      return res
-        .status(400)
-        .json({ detail: "old and new passwords are required" });
-    }
+      const { old_password, new_password } = req.body;
+      if (!old_password || !new_password) {
+        return res
+          .status(400)
+          .json({ detail: "old and new passwords are required" });
+      }
 
-    const isPasswordCorrect = bcrypt.compareSync(old_password, user.password);
-    if (isPasswordCorrect) {
-      user.password = bcrypt.hashSync(new_password, 8);
-      await user.save();
-      return res.status(200).send({ message: "Password changed successfully" });
-    } else {
-      return res.status(401).json({ detail: "old password is incorrect!" });
+      const isPasswordCorrect = bcrypt.compareSync(old_password, user.password);
+      if (isPasswordCorrect) {
+        user.password = bcrypt.hashSync(new_password, 8);
+        await user.save();
+        return res.status(200).send({ message: "Password changed successfully" });
+      } else {
+        return res.status(401).json({ detail: "old password is incorrect!" });
+      }
+    } catch (err) {
+      console.error('Error changing password:', err);
+      return res.status(500).json({ detail: "Failed to change password" });
     }
   };
 }
